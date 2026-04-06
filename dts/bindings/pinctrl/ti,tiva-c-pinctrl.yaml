@@ -1,0 +1,71 @@
+# Copyright (c) 2024, Your Name
+# SPDX-License-Identifier: Apache-2.0
+
+description: |
+  TI Tiva C Series pin controller.
+
+  Device pin configuration should be placed in child nodes of this node.
+  Each child node specifies a TivaWare pin-mux value and the peripheral
+  type for the pin.
+
+  The pinmux value encodes the port and pin information (same encoding
+  used by TivaWare GPIOPinConfigure()), so no separate port/pin
+  properties are needed:
+    - Port index: (pinmux >> 16) & 0xFF  (0=A, 1=B, ... 5=F)
+    - Pin number: ((pinmux >> 8) & 0xFF) / 4
+
+  Example for UART0 on PA0/PA1:
+
+    &pinctrl {
+      uart0_rx_pa0: uart0_rx_pa0 {
+        pinmux = <0x00000001>;   /* GPIO_PA0_U0RX */
+        ti,pin-type = <1>;       /* UART */
+      };
+      uart0_tx_pa1: uart0_tx_pa1 {
+        pinmux = <0x00000401>;   /* GPIO_PA1_U0TX */
+        ti,pin-type = <1>;       /* UART */
+      };
+    };
+
+compatible: "ti,tiva-c-pinctrl"
+
+include: base.yaml
+
+properties:
+  reg:
+    required: true
+
+child-binding:
+  description: TI Tiva C pin configuration node.
+
+  include:
+    - name: pincfg-node.yaml
+      property-allowlist:
+        - bias-disable
+        - bias-pull-up
+        - bias-pull-down
+        - drive-open-drain
+
+  properties:
+    pinmux:
+      required: true
+      type: int
+      description: |
+        TivaWare GPIO_Pxy_FUNC value from pin_map.h.
+        For example GPIO_PA0_U0RX = 0x00000001.
+        Encodes port, pin, and mux function.
+
+    ti,pin-type:
+      type: int
+      default: 0
+      enum: [0, 1, 2, 3, 4, 5, 6]
+      description: |
+        Peripheral type for pin function setup:
+          0 = GPIO (default)
+          1 = UART
+          2 = I2C
+          3 = I2C SCL
+          4 = SSI/SPI
+          5 = CAN
+          6 = PWM
+

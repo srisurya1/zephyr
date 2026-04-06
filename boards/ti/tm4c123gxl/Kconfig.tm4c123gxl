@@ -1,0 +1,5 @@
+# Copyright (c) 2024, Your Name
+# SPDX-License-Identifier: Apache-2.0
+
+config BOARD_TM4C123GXL
+	select SOC_TI_TM4C123GH6PM

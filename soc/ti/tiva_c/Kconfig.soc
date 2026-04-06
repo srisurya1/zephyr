@@ -1,0 +1,10 @@
+# Copyright (c) 2024
+# SPDX-License-Identifier: Apache-2.0
+
+config SOC_FAMILY_TI_TIVA_C
+	bool
+
+config SOC_FAMILY
+	default "ti_tiva_c" if SOC_FAMILY_TI_TIVA_C
+
+rsource "*/Kconfig.soc"
