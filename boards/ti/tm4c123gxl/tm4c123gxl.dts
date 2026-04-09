@@ -7,29 +7,24 @@
 /dts-v1/;
 
 #include <ti/tm4c123gh6pm.dtsi>
+#include <dt-bindings/pinctrl/tiva-c-pinctrl.h>
 
 /*
  * Pin configuration nodes for UART0 and UART1.
- * pinmux values are from TivaWare driverlib/pin_map.h.
- * Port and pin are auto-derived from the pinmux value.
- * ti,pin-type: 1=UART
+ * Use TIVA_C_PINMUX(port, pin, mux, type) macro.
  */
 &pinctrl {
 	uart0_rx_pa0: uart0_rx_pa0 {
-		pinmux = <0x00000001>;   /* GPIO_PA0_U0RX */
-		ti,pin-type = <1>;       /* UART */
+		pinmux = <TIVA_C_PINMUX(TIVA_C_PORT_A, 0, 1, TIVA_C_TYPE_UART)>;
 	};
 	uart0_tx_pa1: uart0_tx_pa1 {
-		pinmux = <0x00000401>;   /* GPIO_PA1_U0TX */
-		ti,pin-type = <1>;       /* UART */
+		pinmux = <TIVA_C_PINMUX(TIVA_C_PORT_A, 1, 1, TIVA_C_TYPE_UART)>;
 	};
 	uart1_rx_pb0: uart1_rx_pb0 {
-		pinmux = <0x00010001>;   /* GPIO_PB0_U1RX */
-		ti,pin-type = <1>;       /* UART */
+		pinmux = <TIVA_C_PINMUX(TIVA_C_PORT_B, 0, 1, TIVA_C_TYPE_UART)>;
 	};
 	uart1_tx_pb1: uart1_tx_pb1 {
-		pinmux = <0x00010401>;   /* GPIO_PB1_U1TX */
-		ti,pin-type = <1>;       /* UART */
+		pinmux = <TIVA_C_PINMUX(TIVA_C_PORT_B, 1, 1, TIVA_C_TYPE_UART)>;
 	};
 };
 
