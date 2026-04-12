@@ -102,15 +102,14 @@ static DEVICE_API(uart, uart_tiva_c_driver_api) = {
 	.poll_out = uart_tiva_c_poll_out,
 };
 
-/* ---- Device instantiation macros ---- */
+/* Device instantiation macros */
 
 #define TIVA_C_UART_INIT(n)						\
 	PINCTRL_DT_INST_DEFINE(n);					\
 									\
 	static const struct uart_tiva_c_config uart_tiva_c_cfg_##n = {	\
 		.base = DT_INST_REG_ADDR(n),				\
-		.sys_clk_freq = DT_INST_PROP_BY_PHANDLE(n, clocks,	\
-							 clock_frequency), \
+		.sys_clk_freq = DT_PROP(DT_INST_CLOCKS_CTLR(n), clock_frequency),\
 		.uart_index = DT_INST_PROP(n, peripheral_id),		\
 		.pcfg = PINCTRL_DT_INST_DEV_CONFIG_GET(n),		\
 	};								\

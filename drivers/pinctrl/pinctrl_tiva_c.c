@@ -3,7 +3,7 @@
 #define DT_DRV_COMPAT ti_tiva_c_pinctrl
 
 /*
- * Copyright (c) 2024, Your Name
+ * Copyright (c) 2024
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -13,88 +13,82 @@
 /* TivaWare HAL */
 #include "driverlib/gpio.h"
 #include "driverlib/sysctl.h"
-#include "driverlib/pin_map.h"
 #include "inc/hw_memmap.h"
 
 /*
- * GPIO port base addresses (APB bus) indexed 0-5 for ports A-F.
- * Used to enable the GPIO clock for each port before configuring pins.
+ * TivaWare GPIOPinConfigure() value from pinmux encoding as per the expectation.
  */
+#define TIVA_C_TO_PINCFG(pm) \
+	((TIVA_C_PINMUX_PORT(pm) << TIVA_C_PINCFG_PORT_SHIFT) | \
+	 (TIVA_C_PINMUX_PIN(pm) << TIVA_C_PINCFG_PIN_SHIFT) | \
+	 TIVA_C_PINMUX_MUX(pm))
+
 static const uint32_t gpio_port_base[] = {
-	GPIO_PORTA_BASE,  /* 0 = Port A */
-	GPIO_PORTB_BASE,  /* 1 = Port B */
-	GPIO_PORTC_BASE,  /* 2 = Port C */
-	GPIO_PORTD_BASE,  /* 3 = Port D */
-	GPIO_PORTE_BASE,  /* 4 = Port E */
-	GPIO_PORTF_BASE,  /* 5 = Port F */
+	GPIO_PORTA_BASE, GPIO_PORTB_BASE, GPIO_PORTC_BASE,
+	GPIO_PORTD_BASE, GPIO_PORTE_BASE, GPIO_PORTF_BASE,
 };
 
 static const uint32_t gpio_port_periph[] = {
-	SYSCTL_PERIPH_GPIOA,
-	SYSCTL_PERIPH_GPIOB,
-	SYSCTL_PERIPH_GPIOC,
-	SYSCTL_PERIPH_GPIOD,
-	SYSCTL_PERIPH_GPIOE,
-	SYSCTL_PERIPH_GPIOF,
+	SYSCTL_PERIPH_GPIOA, SYSCTL_PERIPH_GPIOB, SYSCTL_PERIPH_GPIOC,
+	SYSCTL_PERIPH_GPIOD, SYSCTL_PERIPH_GPIOE, SYSCTL_PERIPH_GPIOF,
 };
 
-/*
- * pinctrl_soc_pin_t layout (from pinctrl_soc.h):
- *   .pinmux  = TivaWare GPIO_Pxy_FUNC value (e.g. GPIO_PA0_U0RX = 0x00000001)
- *   .port    = port index (0=A, 1=B, ... 5=F)
- *   .pin     = pin bit mask (GPIO_PIN_0 .. GPIO_PIN_7)
- *   .flags   = pin type flags from DTS
- */
 int pinctrl_configure_pins(const pinctrl_soc_pin_t *pins,
-		uint8_t pin_cnt,
-		uintptr_t reg)
+			   uint8_t pin_cnt,
+			   uintptr_t reg)
 {
+	uint32_t pm;
+	uint8_t port_idx;
+	uint8_t pin_mask;
+	uint32_t base;
+	uint8_t enabled_ports = 0;
+
 	ARG_UNUSED(reg);
 
 	for (uint8_t i = 0; i < pin_cnt; i++) {
-		uint8_t port_idx = pins[i].port;
-		uint8_t pin_mask = pins[i].pin;
-		uint32_t pinmux = pins[i].pinmux;
+		pm = pins[i].pinmux;
+		port_idx = TIVA_C_PINMUX_PORT(pm);
+		pin_mask = BIT(TIVA_C_PINMUX_PIN(pm));
+		base = gpio_port_base[port_idx];
 
-		/* Enable GPIO port clock */
-		SysCtlPeripheralEnable(gpio_port_periph[port_idx]);
-		while (!SysCtlPeripheralReady(gpio_port_periph[port_idx])) {
+		/* Enable the GPIO port clock once per port and wait until it is ready */
+		if (!(enabled_ports & BIT(port_idx))) {
+			SysCtlPeripheralEnable(gpio_port_periph[port_idx]);
+			while (!SysCtlPeripheralReady(gpio_port_periph[port_idx])) {
+			}
+			enabled_ports |= BIT(port_idx);
 		}
 
-		/* Apply the alternate-function mux setting via TivaWare */
-		GPIOPinConfigure(pinmux);
+		/* Set alternate-function mux */
+		GPIOPinConfigure(TIVA_C_TO_PINCFG(pm));
 
-		/* Set pin type based on flags from DTS */
-		uint32_t port_base = gpio_port_base[port_idx];
-
-		switch (pins[i].flags) {
-			case TIVA_C_PIN_TYPE_UART:
-				GPIOPinTypeUART(port_base, pin_mask);
-				break;
-			case TIVA_C_PIN_TYPE_I2C:
-				GPIOPinTypeI2C(port_base, pin_mask);
-				break;
-			case TIVA_C_PIN_TYPE_I2C_SCL:
-				GPIOPinTypeI2CSCL(port_base, pin_mask);
-				break;
-			case TIVA_C_PIN_TYPE_SSI:
-				GPIOPinTypeSSI(port_base, pin_mask);
-				break;
-			case TIVA_C_PIN_TYPE_CAN:
-				GPIOPinTypeCAN(port_base, pin_mask);
-				break;
-			case TIVA_C_PIN_TYPE_PWM:
-				GPIOPinTypePWM(port_base, pin_mask);
-				break;
-			default:
-				/* Default: standard digital I/O */
-				GPIOPadConfigSet(port_base, pin_mask,
-						GPIO_STRENGTH_2MA,
-						GPIO_PIN_TYPE_STD);
-				break;
+		/* Configure pin type */
+		switch (TIVA_C_PINMUX_TYPE(pm)) {
+		case TIVA_C_TYPE_UART:
+			GPIOPinTypeUART(base, pin_mask);
+			break;
+		case TIVA_C_TYPE_I2C:
+			GPIOPinTypeI2C(base, pin_mask);
+			break;
+		case TIVA_C_TYPE_I2C_SCL:
+			GPIOPinTypeI2CSCL(base, pin_mask);
+			break;
+		case TIVA_C_TYPE_SSI:
+			GPIOPinTypeSSI(base, pin_mask);
+			break;
+		case TIVA_C_TYPE_CAN:
+			GPIOPinTypeCAN(base, pin_mask);
+			break;
+		case TIVA_C_TYPE_PWM:
+			GPIOPinTypePWM(base, pin_mask);
+			break;
+		default:
+			GPIOPadConfigSet(base, pin_mask,
+					 GPIO_STRENGTH_2MA,
+					 GPIO_PIN_TYPE_STD);
+			break;
 		}
 	}
 
 	return 0;
 }
-
