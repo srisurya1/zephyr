@@ -1,12 +1,13 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Copyright (c) 2026 Linumiz
+ * Author: Sri Surya <srisurya@linumiz.com>
+ */
+
 /* pinctrl_tiva_c.c - TI Tiva C Series pin controller driver */
 
 #define DT_DRV_COMPAT ti_tiva_c_pinctrl
-
-/*
- * Copyright (c) 2024
- *
- * SPDX-License-Identifier: Apache-2.0
- */
 
 #include <zephyr/drivers/pinctrl.h>
 

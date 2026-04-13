@@ -1,4 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
+#
+# Copyright (c) 2026 Linumiz
+# Author: Sri Surya <srisurya@linumiz.com>
 
 config PINCTRL_TIVA_C
 	bool "TI Tiva C Series pinctrl driver"

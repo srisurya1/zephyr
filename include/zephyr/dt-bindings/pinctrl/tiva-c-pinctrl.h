@@ -1,7 +1,8 @@
 /*
- * Copyright (c) 2024
- *
  * SPDX-License-Identifier: Apache-2.0
+ *
+ * Copyright (c) 2026 Linumiz
+ * Author: Sri Surya <srisurya@linumiz.com>
  */
 
 #ifndef _TIVA_C_DT_BINDINGS_PINCTRL_H_

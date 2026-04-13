@@ -1,12 +1,13 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Copyright (c) 2026 Linumiz
+ * Author: Sri Surya <srisurya@linumiz.com>
+ */
+
 /* uart_tiva_c.c - TI Tiva C Series UART driver */
 
 #define DT_DRV_COMPAT ti_tiva_c_uart
-
-/*
- * Copyright (c) 2024, Your Name
- *
- * SPDX-License-Identifier: Apache-2.0
- */
 
 /**
  * @brief UART driver for TI Tiva C Series (TM4C123G / TM4C129x)
@@ -72,7 +73,6 @@ static int uart_tiva_c_init(const struct device *dev)
 			     UART_CONFIG_PAR_NONE));
 
 	UARTEnable(cfg->base);
-
 
 	return 0;
 }
